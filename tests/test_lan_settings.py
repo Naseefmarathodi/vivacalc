@@ -105,16 +105,27 @@ class DatabaseUrlTests(SimpleTestCase):
 
     @staticmethod
     def _db(url):
+        """Reload base.py with DATABASE_URL set to *url*.
+
+        An empty string means "not configured": env() treats it as unset, and
+        because the key is present, read_dotenv()'s setdefault() will not
+        repopulate it from the developer's own .env. Without that the test
+        would depend on whatever DATABASE_URL the machine happens to have.
+        """
         import importlib
         import os
 
+        previous = os.environ.get("DATABASE_URL")
         os.environ["DATABASE_URL"] = url
         os.environ.setdefault("DJANGO_SECRET_KEY", "k" * 50)
         try:
             base = importlib.import_module("vivacalc.settings.base")
             return importlib.reload(base).DATABASES["default"]
         finally:
-            os.environ.pop("DATABASE_URL", None)
+            if previous is None:
+                os.environ.pop("DATABASE_URL", None)
+            else:
+                os.environ["DATABASE_URL"] = previous
             importlib.reload(importlib.import_module("vivacalc.settings.base"))
 
     def test_mysql_scheme_selects_the_mysql_backend(self):
@@ -155,9 +166,4 @@ class DatabaseUrlTests(SimpleTestCase):
             self._db("oracle://u:p@h/d")
 
     def test_no_database_url_falls_back_to_sqlite(self):
-        import importlib
-
-        base = importlib.reload(importlib.import_module("vivacalc.settings.base"))
-        self.assertEqual(
-            base.DATABASES["default"]["ENGINE"], "django.db.backends.sqlite3"
-        )
+        self.assertEqual(self._db("")["ENGINE"], "django.db.backends.sqlite3")
