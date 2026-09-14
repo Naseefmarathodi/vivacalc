@@ -43,7 +43,7 @@ hand, and is never exposed as a form field.
 | openpyxl | 3.1.5 | Excel export |
 | reportlab | 4.5.1 | PDF export |
 | Pillow | 12.2.0 | Required by both exporters to embed the logo |
-| Database | SQLite (dev) / PostgreSQL (prod) | Set `DATABASE_URL` for Postgres |
+| Database | SQLite (dev) / PostgreSQL or MySQL (prod) | Set `DATABASE_URL`; see docs/ |
 
 No frontend build step. CSS and JavaScript are plain files under `static/`.
 There is no API framework — the app is server-rendered, and does not need one.

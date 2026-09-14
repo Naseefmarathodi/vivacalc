@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .env import env, env_bool, env_int, env_list, read_dotenv
+from .env import ImproperlyConfigured, env, env_bool, env_int, env_list, read_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -66,23 +66,57 @@ TEMPLATES = [
 ]
 
 # --- Database --------------------------------------------------------------
-# DATABASE_URL (postgres://user:pass@host:port/name) takes precedence;
-# otherwise fall back to the local SQLite file.
+# DATABASE_URL selects the backend; without it, the local SQLite file is used.
+#
+#   postgres://user:pass@host:5432/name
+#   mysql://user:pass@host:3306/name
+#
 _database_url = env("DATABASE_URL", default="")
+
+_ENGINES = {
+    "postgres": "django.db.backends.postgresql",
+    "postgresql": "django.db.backends.postgresql",
+    "mysql": "django.db.backends.mysql",
+    "mariadb": "django.db.backends.mysql",
+    "sqlite": "django.db.backends.sqlite3",
+}
+
 if _database_url:
     from urllib.parse import unquote, urlparse
 
     _parsed = urlparse(_database_url)
+    _scheme = _parsed.scheme.split("+")[0].lower()
+    _engine = _ENGINES.get(_scheme)
+    if _engine is None:
+        raise ImproperlyConfigured(
+            f"Unsupported DATABASE_URL scheme {_parsed.scheme!r}. "
+            f"Expected one of: {', '.join(sorted(set(_ENGINES)))}."
+        )
+
+    _options: dict = {}
+    if _engine.endswith("mysql"):
+        # Both of these matter and neither is MySQL's default:
+        #   utf8mb4  - real 4-byte UTF-8. Without it the rupee sign and any
+        #              non-BMP character in a passenger name are corrupted.
+        #   STRICT_TRANS_TABLES - make MySQL reject bad data instead of
+        #              silently truncating or coercing it. On a financial
+        #              ledger, a silent coercion is the worst possible default.
+        _options = {
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
+
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": _parsed.path.lstrip("/"),
+            "ENGINE": _engine,
+            "NAME": unquote(_parsed.path.lstrip("/")),
             "USER": unquote(_parsed.username or ""),
             "PASSWORD": unquote(_parsed.password or ""),
             "HOST": _parsed.hostname or "",
             "PORT": str(_parsed.port or ""),
             "CONN_MAX_AGE": env_int("CONN_MAX_AGE", 60),
             "CONN_HEALTH_CHECKS": True,
+            "OPTIONS": _options,
         }
     }
 else:

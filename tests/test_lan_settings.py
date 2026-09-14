@@ -98,3 +98,66 @@ class NonTlsProtectionsStayOnTests(SimpleTestCase):
         backend = _lan_settings().CACHES["default"]["BACKEND"]
         self.assertNotIn("locmem", backend)
         self.assertIn("db", backend)
+
+
+class DatabaseUrlTests(SimpleTestCase):
+    """DATABASE_URL must select the right backend and decode credentials."""
+
+    @staticmethod
+    def _db(url):
+        import importlib
+        import os
+
+        os.environ["DATABASE_URL"] = url
+        os.environ.setdefault("DJANGO_SECRET_KEY", "k" * 50)
+        try:
+            base = importlib.import_module("vivacalc.settings.base")
+            return importlib.reload(base).DATABASES["default"]
+        finally:
+            os.environ.pop("DATABASE_URL", None)
+            importlib.reload(importlib.import_module("vivacalc.settings.base"))
+
+    def test_mysql_scheme_selects_the_mysql_backend(self):
+        db = self._db("mysql://u:p@localhost:3306/vivacalc")
+        self.assertEqual(db["ENGINE"], "django.db.backends.mysql")
+        self.assertEqual(db["NAME"], "vivacalc")
+        self.assertEqual(db["PORT"], "3306")
+
+    def test_mariadb_scheme_also_uses_the_mysql_backend(self):
+        self.assertEqual(
+            self._db("mariadb://u:p@h:3306/d")["ENGINE"],
+            "django.db.backends.mysql",
+        )
+
+    def test_postgres_scheme_selects_postgresql(self):
+        self.assertEqual(
+            self._db("postgres://u:p@h:5432/d")["ENGINE"],
+            "django.db.backends.postgresql",
+        )
+
+    def test_mysql_gets_utf8mb4_and_strict_mode(self):
+        """Neither is MySQL's default; both matter for a money ledger."""
+        options = self._db("mysql://u:p@h:3306/d")["OPTIONS"]
+        self.assertEqual(options["charset"], "utf8mb4")
+        self.assertIn("STRICT_TRANS_TABLES", options["init_command"])
+
+    def test_postgres_gets_no_mysql_options(self):
+        self.assertEqual(self._db("postgres://u:p@h:5432/d")["OPTIONS"], {})
+
+    def test_a_percent_encoded_password_is_decoded(self):
+        db = self._db("mysql://viva:p%40ss%21word@h:3306/d")
+        self.assertEqual(db["PASSWORD"], "p@ss!word")
+
+    def test_an_unsupported_scheme_fails_loudly(self):
+        from vivacalc.settings.env import ImproperlyConfigured
+
+        with self.assertRaises(ImproperlyConfigured):
+            self._db("oracle://u:p@h/d")
+
+    def test_no_database_url_falls_back_to_sqlite(self):
+        import importlib
+
+        base = importlib.reload(importlib.import_module("vivacalc.settings.base"))
+        self.assertEqual(
+            base.DATABASES["default"]["ENGINE"], "django.db.backends.sqlite3"
+        )

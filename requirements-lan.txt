@@ -4,4 +4,8 @@
 
 waitress==3.0.2          # WSGI server (pure Python, Windows-friendly)
 whitenoise==6.9.0        # serves /static/ from inside the app; no nginx on the LAN box
-psycopg[binary]==3.2.10  # PostgreSQL driver
+# --- Database driver: install ONE, matching your DATABASE_URL -------------
+# PostgreSQL:
+psycopg[binary]==3.2.10
+# MySQL / MariaDB - uncomment instead of psycopg if you use mysql://
+# mysqlclient==2.2.7
