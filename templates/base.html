@@ -14,7 +14,11 @@
 <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
 </head>
 <body>
-<div class="app">
+<div class="app"
+     {% if user.is_authenticated %}data-session
+     data-session-ends="{{ session_ends_at }}"
+     data-session-idle="{{ session_idle_seconds }}"
+     data-session-logout="{% url 'vivacalc:logout' %}"{% endif %}>
 
   {% include "components/_sidebar.html" %}
   <a class="scrim" href="#" data-nav-scrim aria-label="Close navigation" tabindex="-1"></a>

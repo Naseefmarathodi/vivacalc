@@ -50,18 +50,21 @@ class LoginNotificationTests(TestCase):
             {"username": self.staff.username, "password": PASSWORD},
         )
         subject = mail.outbox[0].subject
-        self.assertIn("Signed in", subject)
+        self.assertIn("Login", subject)
         self.assertIn("rahul", subject)
 
-    def test_the_body_carries_the_audit_details(self):
+    def test_the_body_carries_only_the_username_and_time(self):
         self.client.post(
             reverse("vivacalc:login"),
             {"username": self.staff.username, "password": PASSWORD},
         )
         body = mail.outbox[0].body
         self.assertIn("rahul", body)
-        self.assertIn("Staff", body)
-        self.assertIn("IP address", body)
+        self.assertRegex(body, r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
+        # Everything else was deliberately removed.
+        for absent in ("IP address", "Device", "Staff", "Role", "Mozilla"):
+            with self.subTest(absent=absent):
+                self.assertNotIn(absent, body)
 
     def test_an_html_alternative_is_attached(self):
         self.client.post(
@@ -71,15 +74,17 @@ class LoginNotificationTests(TestCase):
         alternatives = mail.outbox[0].alternatives
         self.assertEqual(len(alternatives), 1)
         self.assertEqual(alternatives[0].mimetype, "text/html")
-        self.assertIn("Signed in", alternatives[0].content)
+        self.assertIn("Login", alternatives[0].content)
 
-    def test_an_admin_is_reported_as_administrator(self):
+    def test_an_admins_role_is_not_disclosed(self):
+        """Role was removed from the message along with IP and device."""
         admin = make_admin("boss")
         self.client.post(
             reverse("vivacalc:login"),
             {"username": admin.username, "password": PASSWORD},
         )
-        self.assertIn("Administrator", mail.outbox[0].body)
+        self.assertIn("boss", mail.outbox[0].body)
+        self.assertNotIn("Administrator", mail.outbox[0].body)
 
     def test_a_failed_sign_in_sends_nothing(self):
         self.client.post(
@@ -100,7 +105,7 @@ class LogoutNotificationTests(TestCase):
     def test_signing_out_sends_a_notification(self):
         self.client.post(reverse("vivacalc:logout"))
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Signed out", mail.outbox[0].subject)
+        self.assertIn("Logout", mail.outbox[0].subject)
         self.assertCountEqual(mail.outbox[0].to, RECIPIENTS)
 
     def test_a_get_to_logout_sends_nothing(self):

@@ -35,13 +35,20 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "plain": {"format": "{asctime} {levelname:<8} {name}: {message}", "style": "{"},
+        # Audit lines are already fully formed; no prefix, so they stay
+        # greppable: LOGIN: username=admin | time=2026-09-14 22:30:15
+        "bare": {"format": "{message}", "style": "{"},
     },
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "plain"},
+        "audit_console": {"class": "logging.StreamHandler", "formatter": "bare"},
     },
     "root": {"handlers": ["console"], "level": "INFO"},
     "loggers": {
         "vivacalc": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "vivacalc.audit": {
+            "handlers": ["audit_console"], "level": "INFO", "propagate": False
+        },
         "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
     },
 }

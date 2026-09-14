@@ -83,4 +83,65 @@
     sell.addEventListener("input", update);
     update();
   }
+
+  // --- Session countdown ---------------------------------------------------
+  // Convenience only. The server enforces both limits in
+  // vivapanel/middleware.py; this just ends the session promptly instead of
+  // leaving a dead page on screen, and makes the logout email arrive at the
+  // moment of expiry rather than on the user's next visit.
+  //
+  // Limits of browser-side idle detection, stated plainly: a page cannot see
+  // the OS screen turning off or the machine sleeping. What it can see is
+  // input events and tab visibility. When a laptop sleeps, timers freeze and
+  // fire late on wake - which is fine here, because the deadline is compared
+  // against wall-clock time, not elapsed ticks. Anything this misses is still
+  // caught by the server on the next request.
+  var shell = document.querySelector("[data-session]");
+  if (shell) {
+    var endsAt = parseInt(shell.getAttribute("data-session-ends"), 10) * 1000;
+    var idleMs = parseInt(shell.getAttribute("data-session-idle"), 10) * 1000;
+    var logoutUrl = shell.getAttribute("data-session-logout");
+    var lastActive = Date.now();
+    var submitted = false;
+
+    var markActive = function () { lastActive = Date.now(); };
+    ["mousedown", "keydown", "scroll", "touchstart", "pointerdown"].forEach(
+      function (evt) {
+        document.addEventListener(evt, markActive, { passive: true });
+      }
+    );
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) markActive();
+    });
+
+    var endSession = function (reason) {
+      if (submitted) return;          // never post twice
+      submitted = true;
+      var form = document.createElement("form");
+      form.method = "post";
+      form.action = logoutUrl;
+      var token = document.querySelector("[name=csrfmiddlewaretoken]");
+      if (token) {
+        var field = document.createElement("input");
+        field.type = "hidden";
+        field.name = "csrfmiddlewaretoken";
+        field.value = token.value;
+        form.appendChild(field);
+      }
+      var why = document.createElement("input");
+      why.type = "hidden";
+      why.name = "reason";
+      why.value = reason;
+      form.appendChild(why);
+      document.body.appendChild(form);
+      form.submit();
+    };
+
+    setInterval(function () {
+      var now = Date.now();
+      // Wall-clock comparison, so a sleeping machine is handled correctly.
+      if (now >= endsAt) return endSession("session_expired");
+      if (idleMs > 0 && now - lastActive >= idleMs) return endSession("inactive");
+    }, 5000);
+  }
 })();

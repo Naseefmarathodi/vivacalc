@@ -119,9 +119,19 @@ LOGGING = {
         "plain": {
             "format": "{asctime} {levelname:<8} {name}: {message}", "style": "{"
         },
+        "bare": {"format": "{message}", "style": "{"},
     },
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "plain"},
+        "audit_console": {"class": "logging.StreamHandler", "formatter": "bare"},
+        "audit_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": str(LOG_DIR / "auth-audit.log"),
+            "maxBytes": 5 * 1024 * 1024,
+            "backupCount": 10,
+            "encoding": "utf-8",
+            "formatter": "bare",
+        },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_DIR / "vivacalc.log"),
@@ -135,6 +145,11 @@ LOGGING = {
     "loggers": {
         "vivacalc": {
             "handlers": ["console", "file"], "level": LOG_LEVEL, "propagate": False
+        },
+        # Its own file, so the sign-in/out history is not buried in app logs.
+        "vivacalc.audit": {
+            "handlers": ["audit_console", "audit_file"],
+            "level": "INFO", "propagate": False,
         },
         "django.request": {
             "handlers": ["console", "file"], "level": "ERROR", "propagate": False

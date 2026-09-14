@@ -40,6 +40,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Must sit after AuthenticationMiddleware: it needs request.user.
+    "vivapanel.middleware.SessionTimeoutMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -60,6 +62,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "vivacalc.context_processors.branding",
+                "vivacalc.context_processors.session_limits",
             ],
         },
     },
@@ -183,9 +186,16 @@ APP_NAME = "VivaCalc"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_AGE = env_int("SESSION_COOKIE_AGE", 60 * 60 * 12)
+# Absolute cap: a session ends this long after sign-in regardless of activity.
+SESSION_MAX_AGE = env_int("SESSION_MAX_AGE", 60 * 60)          # 1 hour
+# Idle cap: ends this long after the last request. Can only shorten a session.
+SESSION_IDLE_TIMEOUT = env_int("SESSION_IDLE_TIMEOUT", 15 * 60)  # 15 minutes
+
+SESSION_COOKIE_AGE = SESSION_MAX_AGE
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_SAVE_EVERY_REQUEST = True
+# Must stay False. True rewrites the cookie on every request, which turns the
+# absolute cap into a sliding one an open tab could extend indefinitely.
+SESSION_SAVE_EVERY_REQUEST = False
 
 # --- Security headers ------------------------------------------------------
 # Safe by default; dev.py relaxes only what cannot work over plain HTTP.
