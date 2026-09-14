@@ -1,0 +1,14 @@
+{{ app_name }} — {{ event_label }}
+
+{{ display_name }} ({{ username }}) {% if event == "login" %}signed in to{% else %}signed out of{% endif %} {{ app_name }}.
+
+  User        {{ display_name }} ({{ username }})
+  Role        {{ role }}
+  Email       {{ email }}
+  When        {{ timestamp_display }}
+  IP address  {{ ip_address }}
+  Device      {{ user_agent }}
+
+--
+Automated message from {{ app_name }} — {{ brand_name }}.
+You are receiving this because your address is listed in AUTH_NOTIFY_RECIPIENTS.

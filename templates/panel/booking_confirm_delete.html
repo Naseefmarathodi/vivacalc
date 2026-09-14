@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration · Bookings{% endblock %}
+{% block heading %}Delete booking{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:560px">
+  <div class="card__head"><h2>Confirm deletion</h2></div>
+  <div class="card__body">
+    <div class="alert alert--warning" role="alert" style="margin-bottom:16px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span>This action cannot be undone.</span>
+    </div>
+
+    <p>You're about to permanently delete the booking for
+       <strong>{{ booking.passenger_name }}</strong>.</p>
+
+    <div class="margin-panel" style="margin-bottom:18px">
+      <dl>
+        <div class="row"><dt>Sector</dt><dd>{{ booking.sector|default:"—" }}</dd></div>
+        <div class="row"><dt>Portal</dt><dd>{{ booking.portal.name|default:"—" }}</dd></div>
+        <div class="row"><dt>Entered by</dt><dd>{{ booking.entered_by.username|default:"—" }}</dd></div>
+        <div class="row row--total {% if booking.margin < 0 %}is-negative{% endif %}">
+          <dt>Margin</dt><dd>{{ CURRENCY_SYMBOL }}{{ booking.margin|floatformat:2 }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--danger">Yes, delete this booking</button>
+        <a class="btn btn--secondary" href="{% url 'adminpanel:booking_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

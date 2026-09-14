@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration{% endblock %}
+{% block heading %}Portals{% endblock %}
+
+{% block topbar_actions %}
+  <a class="btn btn--primary btn--sm" href="{% url 'adminpanel:portal_create' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span>Add portal</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="card__head">
+    <h2>Suppliers</h2>
+    <span class="text-sm text-muted">Portals with bookings can be deactivated, never deleted.</span>
+  </div>
+  {% if portals %}
+    <div class="table-wrap">
+      <table class="data stack-on-mobile">
+        <thead>
+          <tr>
+            <th scope="col">Portal name</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="num">Bookings</th>
+            <th scope="col">Created</th>
+            <th scope="col" class="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for portal in portals %}
+            <tr>
+              <td data-label="Portal"><span class="cell-strong">{{ portal.name }}</span></td>
+              <td data-label="Status">
+                {% if portal.is_active %}
+                  <span class="badge badge--active">Active</span>
+                {% else %}
+                  <span class="badge badge--inactive">Inactive</span>
+                {% endif %}
+              </td>
+              <td data-label="Bookings" class="num">
+                <span class="badge badge--count">{{ portal.bookings_total }}</span>
+              </td>
+              <td data-label="Created">{{ portal.created_at|date:"d M Y" }}</td>
+              <td class="actions">
+                <div class="btn-group">
+                  <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:portal_update' portal.pk %}">Edit</a>
+                  {% if portal.bookings_total %}
+                    {# Protected: deleting would orphan financial history. #}
+                    <span class="btn btn--danger-outline btn--sm" aria-disabled="true"
+                          title="Has {{ portal.bookings_total }} booking(s) — deactivate instead">Delete</span>
+                  {% else %}
+                    <a class="btn btn--danger-outline btn--sm" href="{% url 'adminpanel:portal_delete' portal.pk %}">Delete</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    {% url 'adminpanel:portal_create' as create_url %}
+    {% include "components/_empty.html" with title="No portals yet" body="Add the suppliers you book through so bookings can be attributed to them." action_url=create_url action_label="Add the first portal" %}
+  {% endif %}
+</section>
+{% endblock %}

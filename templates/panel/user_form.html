@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration · Users{% endblock %}
+{% block heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:760px">
+  <div class="card__head">
+    <h2>{% if is_edit %}Edit {{ target_user.username }}{% else %}Account details{% endif %}</h2>
+  </div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <fieldset class="section">
+        <legend>Account</legend>
+        <div class="form-grid">
+          {% include "components/_field.html" with field=form.username %}
+          {% include "components/_field.html" with field=form.email %}
+          {% include "components/_field.html" with field=form.first_name %}
+          {% include "components/_field.html" with field=form.last_name %}
+          {% include "components/_field.html" with field=form.phone %}
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend>Access</legend>
+        <div class="form-grid">
+          {% include "components/_field.html" with field=form.role %}
+          {% if form.is_active %}{% include "components/_field.html" with field=form.is_active %}{% endif %}
+        </div>
+        <p class="text-sm text-muted" style="margin-top:10px">
+          <strong>Admin</strong> can reach the admin panel, all bookings, users and portals.
+          <strong>Staff</strong> can only see and edit their own bookings.
+        </p>
+      </fieldset>
+
+      {% if not is_edit %}
+      <fieldset class="section">
+        <legend>Password</legend>
+        <div class="form-grid">
+          {% include "components/_field.html" with field=form.password1 %}
+          {% include "components/_field.html" with field=form.password2 %}
+        </div>
+      </fieldset>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert--error" role="alert">
+          <span>{{ form.non_field_errors|striptags }}</span>
+        </div>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
+          {% if is_edit %}Save changes{% else %}Create user{% endif %}
+        </button>
+        <a class="btn btn--secondary" href="{% url 'adminpanel:user_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+{% if is_edit %}
+{% comment %}
+A separate form posting to its own endpoint, so a failed password reset never
+discards unsaved profile edits and vice versa.
+{% endcomment %}
+<section class="card" style="max-width:760px">
+  <div class="card__head">
+    <h2>Password</h2>
+  </div>
+  <div class="card__body">
+    <div class="alert alert--info" role="note" style="margin-bottom:18px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span>
+        Existing passwords can't be displayed. VivaCalc stores them as one-way
+        hashes, so nobody &mdash; including administrators &mdash; can read a
+        user's password back. You can set a new one here.
+      </span>
+    </div>
+
+    <form method="post" action="{% url 'adminpanel:user_set_password' target_user.pk %}" novalidate>
+      {% csrf_token %}
+      <div class="form-grid">
+        {% include "components/_field.html" with field=password_form.new_password1 %}
+        {% include "components/_field.html" with field=password_form.new_password2 %}
+      </div>
+
+      {% if password_form.non_field_errors %}
+        <div class="alert alert--error" role="alert" style="margin-top:14px">
+          <span>{{ password_form.non_field_errors|striptags }}</span>
+        </div>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
+          {% if target_user.pk == request.user.pk %}Change my password{% else %}Set new password{% endif %}
+        </button>
+        <span class="spacer"></span>
+        <span class="text-sm text-muted">
+          {% if target_user.pk == request.user.pk %}
+            You'll stay signed in.
+          {% else %}
+            Tell {{ target_user.username }} the new password over a trusted channel.
+          {% endif %}
+        </span>
+      </div>
+    </form>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

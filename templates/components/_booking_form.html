@@ -1,0 +1,83 @@
+{% comment %}
+Shared booking form body, used by both the staff and admin panels.
+Fields are grouped: who is travelling, which supplier, what it costs.
+{% endcomment %}
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  <fieldset class="section">
+    <legend>Passenger information</legend>
+    <div class="form-grid">
+      <div class="span-2">{% include "components/_field.html" with field=form.passenger_name %}</div>
+      {% include "components/_field.html" with field=form.sector %}
+      {% include "components/_field.html" with field=form.service %}
+    </div>
+  </fieldset>
+
+  <fieldset class="section">
+    <legend>Supplier / portal</legend>
+    <div class="form-grid">
+      {% include "components/_field.html" with field=form.portal %}
+    </div>
+  </fieldset>
+
+  <fieldset class="section">
+    <legend>Financial information</legend>
+    <div class="form-grid">
+      {% include "components/_field.html" with field=form.buy_price %}
+      {% include "components/_field.html" with field=form.sell_price %}
+
+      <div class="span-2">
+        {# Margin is derived, never entered — there is no margin input anywhere. #}
+        <div class="margin-panel">
+          <dl>
+            <div class="row">
+              <dt>Buy price</dt>
+              <dd>{{ CURRENCY_SYMBOL }}<span data-buy-output>{% if form.instance.pk %}{{ form.instance.buy_price|floatformat:2 }}{% else %}—{% endif %}</span></dd>
+            </div>
+            <div class="row">
+              <dt>Sell price</dt>
+              <dd>{{ CURRENCY_SYMBOL }}<span data-sell-output>{% if form.instance.pk %}{{ form.instance.sell_price|floatformat:2 }}{% else %}—{% endif %}</span></dd>
+            </div>
+            <div class="row row--total {% if form.instance.pk and form.instance.margin < 0 %}is-negative{% endif %}">
+              <dt>Margin</dt>
+              <dd>{{ CURRENCY_SYMBOL }}<span data-margin-output>{% if form.instance.pk %}{{ form.instance.margin|floatformat:2 }}{% else %}—{% endif %}</span></dd>
+            </div>
+          </dl>
+          <p class="note">Calculated by the system as sell price minus buy price. It cannot be edited.</p>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  {% if is_edit %}
+  <fieldset class="section">
+    <legend>Metadata</legend>
+    <div class="form-grid">
+      <div class="field">
+        <label>Entered by</label>
+        <p class="mt-0">{{ booking.entered_by.username|default:"—" }}</p>
+      </div>
+      <div class="field">
+        <label>Created</label>
+        <p class="mt-0">{{ booking.created_at|date:"d M Y, H:i" }}
+          {% if booking.updated_at and booking.updated_at != booking.created_at %}
+            <span class="cell-sub">Last edited {{ booking.updated_at|date:"d M Y, H:i" }}</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </fieldset>
+  {% endif %}
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn--primary">
+      {% if is_edit %}Save changes{% else %}Create booking{% endif %}
+    </button>
+    <a class="btn btn--secondary" href="{{ cancel_url }}">Cancel</a>
+    {% if is_edit %}
+      <span class="spacer"></span>
+      <a class="btn btn--danger-outline" href="{{ delete_url }}">Delete booking</a>
+    {% endif %}
+  </div>
+</form>

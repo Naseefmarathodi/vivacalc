@@ -1,0 +1,51 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sign in · {{ APP_NAME }}</title>
+<link rel="icon" href="{% static 'logo.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+</head>
+<body>
+<main class="auth">
+  <div class="auth__card">
+    <div class="auth__rule"></div>
+
+    {# The Viva logo, unmodified, on the white ground its artwork expects. #}
+    <div class="auth__brand">
+      <img src="{% static 'logo.png' %}" alt="{{ BRAND_NAME }}" width="74" height="74">
+      <h1>Sign in to {{ APP_NAME }}</h1>
+      <p>Travel booking margin ledger</p>
+    </div>
+
+    <div class="auth__body">
+      {% if form.non_field_errors %}
+        <div class="alert alert--{% if locked %}warning{% else %}error{% endif %}" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+          <span>{% for error in form.non_field_errors %}{{ error }} {% endfor %}</span>
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          {% include "components/_field.html" with field=field %}
+        {% endfor %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button type="submit" class="btn btn--primary">Sign in</button>
+      </form>
+    </div>
+
+    <div class="auth__foot">
+      {{ BRAND_NAME }} · Authorised users only
+    </div>
+  </div>
+</main>
+</body>
+</html>

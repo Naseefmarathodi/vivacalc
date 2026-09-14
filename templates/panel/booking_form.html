@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration · Bookings{% endblock %}
+{% block heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:900px">
+  <div class="card__head">
+    <h2>{% if is_edit %}Edit booking{% else %}Booking details{% endif %}</h2>
+  </div>
+  <div class="card__body">
+    {% url 'adminpanel:booking_list' as cancel_url %}
+    {% if is_edit %}{% url 'adminpanel:booking_delete' booking.pk as delete_url %}{% endif %}
+    {% include "components/_booking_form.html" %}
+  </div>
+</section>
+{% endblock %}

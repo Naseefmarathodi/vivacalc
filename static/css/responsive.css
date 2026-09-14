@@ -1,0 +1,123 @@
+/* ==========================================================================
+   VivaCalc — responsive behaviour
+   Layouts are restructured per breakpoint, not just scaled down.
+   Load order matters: this file comes after style.css and dashboard.css.
+   ========================================================================== */
+
+/* --- Laptop: narrower sidebar, tighter gutters --------------------------- */
+@media (max-width: 1180px) {
+  :root { --sidebar-w: 208px; }
+  .content { padding: 18px; }
+}
+
+/* --- Tablet: sidebar becomes an off-canvas drawer ------------------------ */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    box-shadow: var(--shadow-lg);
+    width: 260px; flex-basis: 260px;
+  }
+  .app.nav-open .sidebar { transform: translateX(0); }
+  /* No-JS fallback: the toggle is an <a href="#sidebar">, so :target opens the
+     drawer. Disabled once app.js adds .js to <html>, which takes over. */
+  html:not(.js) #sidebar:target { transform: translateX(0); }
+  .main { margin-left: 0; }
+
+  .sidebar-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; flex: none;
+    border: 1px solid var(--line-strong); border-radius: var(--r);
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
+  }
+  .sidebar-toggle svg { width: 18px; height: 18px; }
+
+  .scrim {
+    display: block; position: fixed; inset: 0; z-index: 35;
+    background: rgba(22, 32, 43, .42);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .app.nav-open .scrim { opacity: 1; pointer-events: auto; }
+  html:not(.js) #sidebar:target ~ .scrim { opacity: 1; pointer-events: auto; }
+
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .filters__row { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+  .content { padding: 14px; }
+  .content > * + * { margin-top: 14px; }
+  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar__title h1 { font-size: 16px; }
+  .topbar__actions .btn span { display: none; }
+  .topbar__actions .btn { padding: 8px 10px; }
+
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  /* The margin tile is the number that matters most — never leave it orphaned
+     in a half-width cell at the end of a row. */
+  .stats .stat--margin { grid-column: 1 / -1; }
+  .stat { padding: 12px 13px; }
+  .stat__value { font-size: 19px; }
+  .stat__label { font-size: 10px; }
+
+  .card__head, .card__body { padding: 13px 14px; }
+  .filters__form, .filters__actions { padding: 12px 14px; }
+  .filters__actions { flex-direction: column; align-items: stretch; }
+  .filters__actions .spacer { display: none; }
+  .filters__actions .btn-group { display: grid; grid-template-columns: 1fr 1fr; }
+  .filters__actions .btn { width: 100%; }
+
+  .form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .form-actions .btn { width: 100%; }
+  .form-actions .spacer { display: none; }
+
+  .pagination { flex-direction: column; align-items: stretch; gap: 9px; }
+  .pagination__links { margin-left: 0; justify-content: center; flex-wrap: wrap; }
+
+  .auth__brand, .auth__body { padding-left: 22px; padding-right: 22px; }
+}
+
+/* --- Data tables on small screens ---------------------------------------
+   A wide financial table cannot be usefully shrunk, so below 760px each row
+   is restacked into a labelled card. Labels come from data-label attributes
+   in the template, so the markup stays a real <table> for wide screens and
+   for assistive technology.
+   ------------------------------------------------------------------------ */
+@media (max-width: 760px) {
+  table.data.stack-on-mobile thead { display: none; }
+  table.data.stack-on-mobile,
+  table.data.stack-on-mobile tbody,
+  table.data.stack-on-mobile tr,
+  table.data.stack-on-mobile td { display: block; width: 100%; }
+
+  table.data.stack-on-mobile tr {
+    border: 1px solid var(--line); border-radius: var(--r);
+    margin-bottom: 10px; padding: 4px 0; background: var(--surface);
+  }
+  table.data.stack-on-mobile tr:hover td { background: transparent; }
+  table.data.stack-on-mobile td {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 7px 13px; border-bottom: 0; text-align: left !important;
+  }
+  table.data.stack-on-mobile td::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  table.data.stack-on-mobile td:empty { display: none; }
+  table.data.stack-on-mobile td.num { justify-content: space-between; }
+  table.data.stack-on-mobile td.actions {
+    border-top: 1px solid var(--line); margin-top: 4px; padding-top: 10px;
+  }
+  table.data.stack-on-mobile td.actions::before { content: ""; flex: 0; }
+  table.data.stack-on-mobile .cell-clamp { max-width: none; -webkit-line-clamp: 3; line-clamp: 3; }
+
+  table.data.stack-on-mobile tfoot { display: block; }
+  table.data.stack-on-mobile tfoot tr {
+    background: var(--surface-2); border-color: var(--line-strong);
+  }
+  table.data.stack-on-mobile tfoot td { font-weight: 700; }
+}

@@ -1,0 +1,30 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }} · {{ APP_NAME|default:"VivaCalc" }}</title>
+<link rel="icon" href="{% static 'logo.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<main class="errpage">
+  <div class="errpage__inner">
+    {# Viva logo, unmodified — the brand still holds on an error page. #}
+    <img src="{% static 'logo.png' %}" alt="{{ BRAND_NAME|default:'Viva Holidays' }}" width="64" height="64">
+    <div class="errpage__code">Error {{ status_code }}</div>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <div class="btn-group" style="justify-content:center">
+      {% if user.is_authenticated %}
+        <a class="btn btn--primary" href="{% url 'vivacalc:post_login' %}">Back to dashboard</a>
+      {% else %}
+        <a class="btn btn--primary" href="{% url 'vivacalc:login' %}">Go to sign in</a>
+      {% endif %}
+    </div>
+  </div>
+</main>
+</body>
+</html>

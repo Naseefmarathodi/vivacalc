@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration{% endblock %}
+{% block heading %}Users{% endblock %}
+
+{% block topbar_actions %}
+  <a class="btn btn--primary btn--sm" href="{% url 'adminpanel:user_create' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span>New user</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="card__head">
+    <h2>Accounts</h2>
+    <span class="text-sm text-muted">Administrators can use the admin panel; staff see only their own bookings.</span>
+  </div>
+  {% if users %}
+    <div class="table-wrap">
+      <table class="data stack-on-mobile">
+        <thead>
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Role</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="num">Bookings</th>
+            <th scope="col">Joined</th>
+            <th scope="col" class="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {# Loop variable is row_user: `user` would shadow request.user. #}
+          {% for row_user in users %}
+            <tr>
+              <td data-label="Username">
+                <span class="cell-strong">{{ row_user.username }}</span>
+                {% if row_user.pk == request.user.pk %}<span class="cell-sub">That's you</span>{% endif %}
+              </td>
+              <td data-label="Name">{{ row_user.get_full_name|default:"—" }}</td>
+              <td data-label="Email">{{ row_user.email|default:"—" }}</td>
+              <td data-label="Phone">{{ row_user.phone|default:"—" }}</td>
+              <td data-label="Role">
+                {% if row_user.is_panel_admin %}
+                  <span class="badge badge--admin">Admin</span>
+                {% else %}
+                  <span class="badge badge--staff">Staff</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% if row_user.is_active %}
+                  <span class="badge badge--active">Active</span>
+                {% else %}
+                  <span class="badge badge--inactive">Disabled</span>
+                {% endif %}
+              </td>
+              <td data-label="Bookings" class="num">
+                <span class="badge badge--count">{{ row_user.bookings_total }}</span>
+              </td>
+              <td data-label="Joined">{{ row_user.date_joined|date:"d M Y" }}</td>
+              <td class="actions">
+                <div class="btn-group">
+                  <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:user_update' row_user.pk %}">Edit</a>
+                  {% if row_user.pk == request.user.pk %}
+                    <span class="btn btn--danger-outline btn--sm" aria-disabled="true"
+                          title="You cannot delete your own account">Delete</span>
+                  {% else %}
+                    <a class="btn btn--danger-outline btn--sm" href="{% url 'adminpanel:user_delete' row_user.pk %}">Delete</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    {% url 'adminpanel:user_create' as create_url %}
+    {% include "components/_empty.html" with title="No users yet" body="Create accounts for the staff who will record bookings." action_url=create_url action_label="Create the first user" %}
+  {% endif %}
+</section>
+{% endblock %}

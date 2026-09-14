@@ -1,0 +1,92 @@
+{% load static %}
+{% comment %}
+Single navigation component for both roles. The links a user sees are decided
+by request.user.is_panel_admin, so there is one sidebar, not two.
+{% endcomment %}
+<aside class="sidebar" id="sidebar">
+  {% comment %}
+  The Viva logo, used as-is. The PNG has a baked-in white background, so this
+  lockup is deliberately white — never place it on a tint.
+  {% endcomment %}
+  <a class="sidebar__brand" href="{% url 'vivacalc:post_login' %}">
+    <img src="{% static 'logo.png' %}" alt="{{ BRAND_NAME }}" width="34" height="34">
+    <span class="sidebar__wordmark">
+      <strong>{{ APP_NAME }}</strong>
+      <span>Margin ledger</span>
+    </span>
+  </a>
+
+  <nav class="sidebar__nav" aria-label="Main">
+    {% if user.is_panel_admin %}
+      <div class="nav-group">
+        <div class="nav-group__label">Administration</div>
+        <a class="nav-link {% if request.resolver_match.view_name == 'adminpanel:dashboard' %}is-active{% endif %}"
+           href="{% url 'adminpanel:dashboard' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-link {% if 'adminpanel:booking' in request.resolver_match.view_name or 'export' in request.resolver_match.view_name %}is-active{% endif %}"
+           href="{% url 'adminpanel:booking_list' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg>
+          Bookings
+        </a>
+        <a class="nav-link {% if 'portal' in request.resolver_match.view_name %}is-active{% endif %}"
+           href="{% url 'adminpanel:portal_list' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/></svg>
+          Portals
+        </a>
+        <a class="nav-link {% if 'user' in request.resolver_match.view_name %}is-active{% endif %}"
+           href="{% url 'adminpanel:user_list' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.87"/></svg>
+          Users
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group__label">Reports</div>
+        <a class="nav-link" href="{% url 'adminpanel:booking_list' %}#export">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
+          Export ledger
+        </a>
+      </div>
+    {% else %}
+      <div class="nav-group">
+        <div class="nav-group__label">Workspace</div>
+        <a class="nav-link {% if request.resolver_match.view_name == 'vivacalc:dashboard' %}is-active{% endif %}"
+           href="{% url 'vivacalc:dashboard' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-link {% if request.resolver_match.view_name == 'vivacalc:booking_list' %}is-active{% endif %}"
+           href="{% url 'vivacalc:booking_list' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg>
+          My bookings
+        </a>
+        <a class="nav-link {% if request.resolver_match.view_name == 'vivacalc:booking_create' %}is-active{% endif %}"
+           href="{% url 'vivacalc:booking_create' %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          New booking
+        </a>
+      </div>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar__foot">
+    <div class="who">
+      <span class="avatar" aria-hidden="true">{{ user.username|slice:":2"|upper }}</span>
+      <span class="who__meta">
+        <span class="who__name">{{ user.display_name }}</span>
+        <span class="who__role">
+          {% if user.is_panel_admin %}Administrator{% else %}Staff{% endif %}
+        </span>
+      </span>
+    </div>
+    {# Logout is POST-only: a GET link can be triggered by any third-party page. #}
+    <form method="post" action="{% url 'vivacalc:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--secondary btn--sm" style="width:100%">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>
+        Sign out
+      </button>
+    </form>
+  </div>
+</aside>

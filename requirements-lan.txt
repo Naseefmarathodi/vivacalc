@@ -1,0 +1,7 @@
+# Windows LAN deployment extras. Install on the server in addition to
+# requirements.txt:   pip install -r requirements-lan.txt
+-r requirements.txt
+
+waitress==3.0.2          # WSGI server (pure Python, Windows-friendly)
+whitenoise==6.9.0        # serves /static/ from inside the app; no nginx on the LAN box
+psycopg[binary]==3.2.10  # PostgreSQL driver

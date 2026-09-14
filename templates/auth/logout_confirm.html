@@ -1,0 +1,30 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign out · {{ APP_NAME }}</title>
+<link rel="icon" href="{% static 'logo.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<main class="errpage">
+  <div class="errpage__inner">
+    <img src="{% static 'logo.png' %}" alt="{{ BRAND_NAME }}" width="64" height="64">
+    <div class="errpage__code">Confirm</div>
+    <h1>Sign out of {{ APP_NAME }}?</h1>
+    {# Signing out changes state, so it is never done by following a link. #}
+    <p>Signing out ends your session on this device.</p>
+    <form method="post" action="{% url 'vivacalc:logout' %}">
+      {% csrf_token %}
+      <div class="btn-group" style="justify-content:center">
+        <button type="submit" class="btn btn--primary">Sign out</button>
+        <a class="btn btn--secondary" href="{% url 'vivacalc:post_login' %}">Stay signed in</a>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>

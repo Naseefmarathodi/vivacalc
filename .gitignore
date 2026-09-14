@@ -1,0 +1,46 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Django
+*.sqlite3
+*.sqlite3-journal
+staticfiles/
+media/
+*.log
+logs/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Archives / backups
+*.zip
+*.tar.gz
+*.bak
+
+# Tooling
+.qodo/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Data exports carried between machines by hand (contain password hashes)
+transfer/
+*.bundle

@@ -1,0 +1,54 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{% block title %}{{ page_title }}{% endblock %} · {{ APP_NAME }}</title>
+<link rel="icon" href="{% static 'logo.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+{% block extra_css %}{% endblock %}
+<link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+</head>
+<body>
+<div class="app">
+
+  {% include "components/_sidebar.html" %}
+  <a class="scrim" href="#" data-nav-scrim aria-label="Close navigation" tabindex="-1"></a>
+
+  <div class="main">
+    <header class="topbar">
+      {% comment %}
+      A link, not a button, so the CSS :target fallback opens the drawer when
+      JavaScript is unavailable. app.js intercepts the click.
+      {% endcomment %}
+      <a href="#sidebar" class="sidebar-toggle" data-nav-toggle role="button"
+         aria-expanded="false" aria-label="Open navigation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+      </a>
+
+      <div class="topbar__title">
+        <div class="crumb">{% block crumb %}{{ BRAND_NAME }}{% endblock %}</div>
+        <h1>{% block heading %}{{ page_title }}{% endblock %}</h1>
+      </div>
+
+      <div class="topbar__actions">{% block topbar_actions %}{% endblock %}</div>
+    </header>
+
+    <main class="content">
+      {% include "components/_messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script src="{% static 'js/app.js' %}" defer></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

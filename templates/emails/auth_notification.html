@@ -1,0 +1,66 @@
+{% comment %}
+Email HTML: tables and inline styles only. Mail clients strip <style> blocks
+and understand almost no modern CSS, so this cannot share the app stylesheet.
+Colours are the Viva brand values, hard-coded here for that reason.
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#16202b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f4f7;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e3e8ed;border-radius:8px;overflow:hidden;">
+
+        <tr><td style="height:4px;background:#EC1C24;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+        <tr><td style="padding:22px 26px 6px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:{% if event == 'login' %}#0F6E42{% else %}#66727f{% endif %};">
+            {{ event_label }}
+          </div>
+          <div style="font-size:19px;font-weight:700;margin-top:6px;color:#16202b;">
+            {{ display_name }}
+          </div>
+          <div style="font-size:13px;color:#66727f;margin-top:2px;">
+            {% if event == "login" %}signed in to{% else %}signed out of{% endif %} {{ app_name }}
+          </div>
+        </td></tr>
+
+        <tr><td style="padding:16px 26px 22px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;border-collapse:collapse;">
+            <tr>
+              <td style="padding:8px 0;color:#66727f;width:110px;border-bottom:1px solid #eef1f4;">Username</td>
+              <td style="padding:8px 0;font-weight:600;border-bottom:1px solid #eef1f4;">{{ username }}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#66727f;border-bottom:1px solid #eef1f4;">Role</td>
+              <td style="padding:8px 0;border-bottom:1px solid #eef1f4;">{{ role }}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#66727f;border-bottom:1px solid #eef1f4;">Email</td>
+              <td style="padding:8px 0;border-bottom:1px solid #eef1f4;">{{ email }}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#66727f;border-bottom:1px solid #eef1f4;">When</td>
+              <td style="padding:8px 0;font-weight:600;border-bottom:1px solid #eef1f4;">{{ timestamp_display }}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#66727f;border-bottom:1px solid #eef1f4;">IP address</td>
+              <td style="padding:8px 0;border-bottom:1px solid #eef1f4;">{{ ip_address }}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;color:#66727f;vertical-align:top;">Device</td>
+              <td style="padding:8px 0;color:#66727f;font-size:12px;line-height:1.45;">{{ user_agent }}</td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:13px 26px;background:#f7f9fb;border-top:1px solid #e3e8ed;font-size:11px;color:#8a96a3;line-height:1.5;">
+          Automated message from {{ app_name }} &mdash; {{ brand_name }}.<br>
+          You are receiving this because your address is listed in AUTH_NOTIFY_RECIPIENTS.
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Pinned to the versions this project is verified to run on.
+# Python 3.14.6
+Django==6.0.5
+openpyxl==3.1.5          # Excel export (replaces pandas)
+reportlab==4.5.1         # PDF export
+Pillow==12.2.0           # required by reportlab + openpyxl to embed the Viva logo

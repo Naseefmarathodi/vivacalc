@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block crumb %}Administration{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{% endblock %}
+
+{% block topbar_actions %}
+  <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:booking_list' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg>
+    <span>All bookings</span>
+  </a>
+  <a class="btn btn--primary btn--sm" href="{% url 'adminpanel:booking_create' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span>New booking</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+
+{# --- Headline figures, all read from the database --------------------- #}
+<section class="stats" aria-label="Ledger totals">
+  <div class="stat stat--accent">
+    <div class="stat__label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg>
+      Total bookings
+    </div>
+    <div class="stat__value">{{ overall.count|default:"0" }}</div>
+    <div class="stat__meta">{{ today_stats.count|default:"0" }} today · {{ month_stats.count|default:"0" }} this month</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat__label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+      Total buy
+    </div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ overall.total_buy|default:"0"|floatformat:2 }}</div>
+    <div class="stat__meta">Paid to suppliers</div>
+  </div>
+
+  <div class="stat">
+    <div class="stat__label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 14-5-5-5 5M12 9v12"/><path d="M21 9V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4"/></svg>
+      Total sell
+    </div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ overall.total_sell|default:"0"|floatformat:2 }}</div>
+    <div class="stat__meta">Invoiced to customers</div>
+  </div>
+
+  <div class="stat stat--margin">
+    <div class="stat__label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>
+      Total margin
+    </div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ overall.total_margin|default:"0"|floatformat:2 }}</div>
+    <div class="stat__meta">Sell less buy, across all bookings</div>
+  </div>
+</section>
+
+<div class="dash-grid">
+
+  <div class="stack">
+    {# --- Composition of revenue ------------------------------------- #}
+    <section class="dash-hero">
+      <h2>Where the money sits</h2>
+      <p>Of {{ CURRENCY_SYMBOL }}{{ overall.total_sell|default:"0"|floatformat:2 }} invoiced,
+         {{ CURRENCY_SYMBOL }}{{ overall.total_margin|default:"0"|floatformat:2 }} is margin.</p>
+      {% if overall.total_sell %}
+        <div class="split" role="img"
+             aria-label="Supplier cost versus margin as a share of total sell value">
+          <div class="split__buy" style="flex: {{ overall.total_buy|default:0 }}"></div>
+          <div class="split__margin" style="flex: {{ overall.total_margin|default:0 }}"></div>
+        </div>
+        <div class="split-legend">
+          <span><i class="k-buy"></i> Supplier cost {{ CURRENCY_SYMBOL }}{{ overall.total_buy|default:"0"|floatformat:2 }}</span>
+          <span><i class="k-margin"></i> Margin {{ CURRENCY_SYMBOL }}{{ overall.total_margin|default:"0"|floatformat:2 }}</span>
+        </div>
+      {% endif %}
+      <div class="dash-hero__actions">
+        <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:portal_list' %}">
+          {{ active_portals }} active portal{{ active_portals|pluralize }}
+        </a>
+        <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:user_list' %}">
+          {{ staff_count }} active user{{ staff_count|pluralize }}
+        </a>
+      </div>
+    </section>
+
+    {# --- Recent bookings -------------------------------------------- #}
+    <section class="card">
+      <div class="card__head">
+        <h2>Recent bookings</h2>
+        <div class="card__actions">
+          <a class="btn btn--ghost btn--sm" href="{% url 'adminpanel:booking_list' %}">View all</a>
+        </div>
+      </div>
+      {% if recent_bookings %}
+        <div class="table-wrap">
+          <table class="data stack-on-mobile">
+            <thead>
+              <tr>
+                <th scope="col">Passenger</th>
+                <th scope="col">Portal</th>
+                <th scope="col">Entered by</th>
+                <th scope="col" class="num">Margin</th>
+                <th scope="col">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for booking in recent_bookings %}
+                <tr>
+                  <td data-label="Passenger">
+                    <span class="cell-strong">{{ booking.passenger_name }}</span>
+                    {% if booking.sector %}<span class="cell-sub">{{ booking.sector|truncatechars:40 }}</span>{% endif %}
+                  </td>
+                  <td data-label="Portal">{{ booking.portal.name|default:"—" }}</td>
+                  <td data-label="Entered by">{{ booking.entered_by.username|default:"—" }}</td>
+                  <td data-label="Margin" class="num {% if booking.margin < 0 %}money-neg{% else %}money-pos{% endif %}">
+                    {{ CURRENCY_SYMBOL }}{{ booking.margin|floatformat:2 }}
+                  </td>
+                  <td data-label="Date">{{ booking.created_at|date:"d M Y" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        {% include "components/_empty.html" with title="No bookings yet" body="Once staff start recording bookings, the most recent ones appear here." action_url=None %}
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="stack">
+    {# --- Period breakdown ------------------------------------------- #}
+    <section class="card">
+      <div class="card__head"><h2>By period</h2></div>
+      <div class="card__body">
+        <dl class="period-list">
+          <div class="period-list__item">
+            <dt>Today <span class="count">({{ today_stats.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ today_stats.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+          <div class="period-list__item">
+            <dt>Last 7 days <span class="count">({{ week_stats.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ week_stats.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+          <div class="period-list__item">
+            <dt>This month <span class="count">({{ month_stats.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ month_stats.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+          <div class="period-list__item">
+            <dt>All time <span class="count">({{ overall.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ overall.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+        </dl>
+        <p class="text-sm text-muted" style="margin:10px 0 0">
+          Margin totals. Day boundaries follow the business timezone,
+          not UTC &mdash; today is {{ today|date:"d M Y" }}.
+        </p>
+      </div>
+    </section>
+
+    {# --- Top contributors ------------------------------------------- #}
+    {% if top_users %}
+    <section class="card">
+      <div class="card__head"><h2>Margin by user</h2></div>
+      <div class="card__body">
+        <div class="leaderboard">
+          {% for row in top_users %}
+            <div class="leaderboard__row">
+              <span class="leaderboard__rank">{{ forloop.counter }}</span>
+              <span class="leaderboard__name">
+                {{ row.entered_by__username|default:"Deleted user" }}
+                <small>{{ row.count }} booking{{ row.count|pluralize }}</small>
+              </span>
+              <span class="leaderboard__value {% if row.margin < 0 %}is-negative{% endif %}">
+                {{ CURRENCY_SYMBOL }}{{ row.margin|default:"0"|floatformat:2 }}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

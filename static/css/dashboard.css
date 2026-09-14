@@ -1,0 +1,75 @@
+/* ==========================================================================
+   VivaCalc — dashboard-specific layout
+   Loaded only on the two dashboard pages.
+   ========================================================================== */
+
+.dash-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.dash-hero {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--viva-red);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.dash-hero h2 { font-size: 18px; margin-bottom: 4px; }
+.dash-hero p { color: var(--muted); font-size: 13px; margin: 0; }
+.dash-hero__actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Margin split bar: buy vs margin as a share of the sell price. */
+.split {
+  display: flex; height: 8px; border-radius: 100px; overflow: hidden;
+  background: var(--surface-2); margin-top: 12px;
+}
+.split__buy { background: var(--viva-grey); }
+.split__margin { background: var(--viva-red); }
+.split-legend {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-top: 9px;
+  font-size: 11.5px; color: var(--muted);
+}
+.split-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.split-legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.split-legend .k-buy { background: var(--viva-grey); }
+.split-legend .k-margin { background: var(--viva-red); }
+
+.period-list { display: grid; gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; }
+.period-list__item {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 11px 14px; background: var(--surface);
+}
+.period-list__item dt { font-size: 12.5px; color: var(--muted); }
+.period-list__item dd {
+  margin: 0 0 0 auto; font-weight: 700; font-size: 14px;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.period-list__item .count { font-size: 11.5px; color: var(--muted-2); font-weight: 500; }
+
+.leaderboard { display: grid; gap: 1px; }
+.leaderboard__row {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center; gap: 10px; padding: 9px 0;
+  border-bottom: 1px solid var(--line); font-size: 13px;
+}
+.leaderboard__row:last-child { border-bottom: 0; }
+.leaderboard__rank {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface-2); color: var(--muted);
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+}
+.leaderboard__row:first-child .leaderboard__rank {
+  background: var(--viva-red-050); color: var(--viva-red-700);
+}
+.leaderboard__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leaderboard__name small { display: block; font-weight: 500; color: var(--muted); font-size: 11.5px; }
+.leaderboard__value { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--success); }
+.leaderboard__value.is-negative { color: var(--danger); }
+
+@media (max-width: 1080px) {
+  .dash-grid { grid-template-columns: minmax(0, 1fr); }
+}

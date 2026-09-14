@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration{% endblock %}
+{% block heading %}Bookings{% endblock %}
+
+{% block topbar_actions %}
+  <a class="btn btn--primary btn--sm" href="{% url 'adminpanel:booking_create' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span>New booking</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+
+{# --- Filter toolbar. The same form drives both exports below. --------- #}
+<section class="filters" id="export">
+  <form method="get" class="filters__form" id="booking-filters" novalidate>
+    <div class="filters__row">
+      {% for field in filter_form %}
+        {% include "components/_field.html" with field=field %}
+      {% endfor %}
+    </div>
+  </form>
+  <div class="filters__actions">
+    <div class="btn-group">
+      <button type="submit" class="btn btn--primary btn--sm" form="booking-filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>
+        Filter
+      </button>
+      <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:booking_list' %}">Reset</a>
+    </div>
+    <span class="spacer"></span>
+    <span class="filters__summary"><strong>{{ result_count }}</strong> booking{{ result_count|pluralize }} matched</span>
+    <div class="btn-group">
+      {# Export links carry the active filters, so the file matches the table. #}
+      <a class="btn btn--secondary btn--sm"
+         href="{% url 'adminpanel:export_bookings_excel' %}{% if filter_query %}?{{ filter_query }}{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
+        Excel
+      </a>
+      <a class="btn btn--secondary btn--sm"
+         href="{% url 'adminpanel:export_bookings_pdf' %}{% if filter_query %}?{{ filter_query }}{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        PDF
+      </a>
+    </div>
+  </div>
+</section>
+
+{# --- Totals for the filtered set. These match the export totals exactly. #}
+<section class="stats" aria-label="Totals for the current filter">
+  <div class="stat">
+    <div class="stat__label">Buy value</div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ totals.total_buy|default:"0"|floatformat:2 }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat__label">Sell value</div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ totals.total_sell|default:"0"|floatformat:2 }}</div>
+  </div>
+  <div class="stat stat--margin stat--accent">
+    <div class="stat__label">Margin</div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ totals.total_margin|default:"0"|floatformat:2 }}</div>
+  </div>
+</section>
+
+<section class="card">
+  {% if bookings %}
+    <div class="table-wrap">
+      <table class="data stack-on-mobile">
+        <thead>
+          <tr>
+            <th scope="col">Passenger</th>
+            <th scope="col">Sector</th>
+            <th scope="col">Service</th>
+            <th scope="col">Portal</th>
+            <th scope="col" class="num">Buy</th>
+            <th scope="col" class="num">Sell</th>
+            <th scope="col" class="num">Margin</th>
+            <th scope="col">Entered by</th>
+            <th scope="col">Date</th>
+            <th scope="col" class="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for booking in bookings %}
+            <tr>
+              <td data-label="Passenger"><span class="cell-strong">{{ booking.passenger_name }}</span></td>
+              <td data-label="Sector">{{ booking.sector|default:"—" }}</td>
+              <td data-label="Service"><span class="cell-clamp">{{ booking.service|default:"—" }}</span></td>
+              <td data-label="Portal">{{ booking.portal.name|default:"—" }}</td>
+              <td data-label="Buy" class="num">{{ CURRENCY_SYMBOL }}{{ booking.buy_price|floatformat:2 }}</td>
+              <td data-label="Sell" class="num">{{ CURRENCY_SYMBOL }}{{ booking.sell_price|floatformat:2 }}</td>
+              <td data-label="Margin" class="num {% if booking.margin < 0 %}money-neg{% else %}money-pos{% endif %}">
+                {{ CURRENCY_SYMBOL }}{{ booking.margin|floatformat:2 }}
+              </td>
+              <td data-label="Entered by">{{ booking.entered_by.username|default:"—" }}</td>
+              <td data-label="Date">{{ booking.created_at|date:"d M Y" }}</td>
+              <td class="actions">
+                <div class="btn-group">
+                  <a class="btn btn--secondary btn--sm" href="{% url 'adminpanel:booking_update' booking.pk %}">Edit</a>
+                  <a class="btn btn--danger-outline btn--sm" href="{% url 'adminpanel:booking_delete' booking.pk %}">Delete</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" data-label="Total">Total across all {{ result_count }} matching booking{{ result_count|pluralize }}</td>
+            <td class="num" data-label="Buy">{{ CURRENCY_SYMBOL }}{{ totals.total_buy|default:"0"|floatformat:2 }}</td>
+            <td class="num" data-label="Sell">{{ CURRENCY_SYMBOL }}{{ totals.total_sell|default:"0"|floatformat:2 }}</td>
+            <td class="num" data-label="Margin">{{ CURRENCY_SYMBOL }}{{ totals.total_margin|default:"0"|floatformat:2 }}</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% include "components/_pagination.html" %}
+  {% else %}
+    {% if filter_form.is_filtered %}
+      {% url 'adminpanel:booking_list' as reset_url %}
+      {% include "components/_empty.html" with title="No bookings match these filters" body="Try widening the date range or clearing the search terms." action_url=reset_url action_label="Clear filters" %}
+    {% else %}
+      {% url 'adminpanel:booking_create' as create_url %}
+      {% include "components/_empty.html" with title="No bookings yet" body="Bookings recorded by staff will appear here." action_url=create_url action_label="Create the first booking" %}
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

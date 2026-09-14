@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block crumb %}Administration · Portals{% endblock %}
+{% block heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<section class="card" style="max-width:560px">
+  <div class="card__head"><h2>Portal details</h2></div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="span-2">{% include "components/_field.html" with field=form.name %}</div>
+        <div class="span-2">{% include "components/_field.html" with field=form.is_active %}</div>
+      </div>
+      {% if is_edit and portal.bookings.exists %}
+        <p class="text-sm text-muted" style="margin-top:12px">
+          This portal is on {{ portal.bookings.count }} booking{{ portal.bookings.count|pluralize }}.
+          Deactivating hides it from new bookings; existing ones are unaffected.
+        </p>
+      {% endif %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
+          {% if is_edit %}Save changes{% else %}Create portal{% endif %}
+        </button>
+        <a class="btn btn--secondary" href="{% url 'adminpanel:portal_list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

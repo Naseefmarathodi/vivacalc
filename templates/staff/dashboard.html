@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block crumb %}Workspace{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{% endblock %}
+
+{% block topbar_actions %}
+  <a class="btn btn--primary btn--sm" href="{% url 'vivacalc:booking_create' %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span>New booking</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+
+{# Every figure here is scoped to the signed-in user's own bookings. #}
+<section class="stats" aria-label="My totals">
+  <div class="stat stat--accent">
+    <div class="stat__label">My bookings</div>
+    <div class="stat__value">{{ totals.count|default:"0" }}</div>
+    <div class="stat__meta">{{ today_stats.count|default:"0" }} entered today</div>
+  </div>
+  <div class="stat">
+    <div class="stat__label">Total buy</div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ totals.total_buy|default:"0"|floatformat:2 }}</div>
+    <div class="stat__meta">Supplier cost</div>
+  </div>
+  <div class="stat">
+    <div class="stat__label">Total sell</div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ totals.total_sell|default:"0"|floatformat:2 }}</div>
+    <div class="stat__meta">Invoiced</div>
+  </div>
+  <div class="stat stat--margin">
+    <div class="stat__label">My margin</div>
+    <div class="stat__value">{{ CURRENCY_SYMBOL }}{{ totals.total_margin|default:"0"|floatformat:2 }}</div>
+    <div class="stat__meta">{{ CURRENCY_SYMBOL }}{{ month_stats.total_margin|default:"0"|floatformat:2 }} this month</div>
+  </div>
+</section>
+
+<div class="dash-grid">
+  <div class="stack">
+    <section class="dash-hero">
+      <h2>Welcome back, {{ user.display_name }}</h2>
+      <p>You've entered {{ today_stats.count|default:"0" }} booking{{ today_stats.count|default:0|pluralize }}
+         today, worth {{ CURRENCY_SYMBOL }}{{ today_stats.total_margin|default:"0"|floatformat:2 }} in margin.</p>
+      <div class="dash-hero__actions">
+        <a class="btn btn--primary btn--sm" href="{% url 'vivacalc:booking_create' %}">Create booking</a>
+        <a class="btn btn--secondary btn--sm" href="{% url 'vivacalc:booking_list' %}">View all my bookings</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__head">
+        <h2>Recent bookings</h2>
+        <div class="card__actions">
+          <a class="btn btn--ghost btn--sm" href="{% url 'vivacalc:booking_list' %}">View all</a>
+        </div>
+      </div>
+      {% if recent_bookings %}
+        <div class="table-wrap">
+          <table class="data stack-on-mobile">
+            <thead>
+              <tr>
+                <th scope="col">Passenger</th>
+                <th scope="col">Portal</th>
+                <th scope="col" class="num">Buy</th>
+                <th scope="col" class="num">Sell</th>
+                <th scope="col" class="num">Margin</th>
+                <th scope="col">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for booking in recent_bookings %}
+                <tr>
+                  <td data-label="Passenger">
+                    <span class="cell-strong">{{ booking.passenger_name }}</span>
+                    {% if booking.sector %}<span class="cell-sub">{{ booking.sector|truncatechars:40 }}</span>{% endif %}
+                  </td>
+                  <td data-label="Portal">{{ booking.portal.name|default:"—" }}</td>
+                  <td data-label="Buy" class="num">{{ CURRENCY_SYMBOL }}{{ booking.buy_price|floatformat:2 }}</td>
+                  <td data-label="Sell" class="num">{{ CURRENCY_SYMBOL }}{{ booking.sell_price|floatformat:2 }}</td>
+                  <td data-label="Margin" class="num {% if booking.margin < 0 %}money-neg{% else %}money-pos{% endif %}">
+                    {{ CURRENCY_SYMBOL }}{{ booking.margin|floatformat:2 }}
+                  </td>
+                  <td data-label="Date">{{ booking.created_at|date:"d M Y" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        {% url 'vivacalc:booking_create' as create_url %}
+        {% include "components/_empty.html" with title="No bookings yet" body="Create your first booking to start tracking margins." action_url=create_url action_label="Create booking" %}
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="card">
+      <div class="card__head"><h2>My activity</h2></div>
+      <div class="card__body">
+        <dl class="period-list">
+          <div class="period-list__item">
+            <dt>Today <span class="count">({{ today_stats.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ today_stats.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+          <div class="period-list__item">
+            <dt>This month <span class="count">({{ month_stats.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ month_stats.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+          <div class="period-list__item">
+            <dt>All time <span class="count">({{ totals.count|default:"0" }})</span></dt>
+            <dd>{{ CURRENCY_SYMBOL }}{{ totals.total_margin|default:"0"|floatformat:2 }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

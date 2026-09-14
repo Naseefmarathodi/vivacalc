@@ -1,0 +1,3 @@
+-r requirements.txt
+# Optional developer tooling. Not required to run the app or the test suite;
+# the tests use Django's own test runner (python manage.py test).
